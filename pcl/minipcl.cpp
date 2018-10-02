@@ -4,6 +4,8 @@
 #include <pcl/filters/extract_indices.h>
 #include <pcl/octree/octree_pointcloud.h>
 
+#include <pcl/features/boundary.h>
+
 #include <pcl/features/vfh.h>
 #include <pcl/io/pcd_io.h>
 
@@ -135,6 +137,34 @@ void mpcl_extract_PointXYZRGBA(pcl::PointCloud<pcl::PointXYZRGBA>::Ptr &incloud,
     ext.setNegative(negative);
     ext.filter(*outcloud);
 }
+
+// Boundary estimation (uses normal estimation, hence the parameters).
+void mpcl_estimate_boundaries(pcl::PointCloud<pcl::PointXYZ> &cloud,
+                              float angle_threshold,
+                              double search_radius,
+                              int normal_ksearch,
+                              double normal_search_radius,
+                              char *out, size_t n)
+{
+    pcl::PointCloud<pcl::Normal> normals;
+    mpcl_compute_normals(cloud, normal_ksearch, normal_search_radius, normals);
+    pcl::PointCloud<pcl::Boundary> boundaries;
+    pcl::BoundaryEstimation<pcl::PointXYZ, pcl::Normal, pcl::Boundary> est;
+    est.setInputCloud(cloud.makeShared());
+    est.setInputNormals(normals.makeShared());
+
+    if (search_radius >= 0) {
+        est.setRadiusSearch(search_radius);
+    }
+
+    est.setSearchMethod(typename pcl::search::KdTree<pcl::PointXYZ>::Ptr(
+                            new pcl::search::KdTree<pcl::PointXYZ>));
+    est.compute(boundaries);
+
+    for (size_t i = 0; i < n; i++) {
+        out[i] = boundaries[i].boundary_point;
+    }
+} 
 
 // EuclideanClusterExtraction
 // Octree

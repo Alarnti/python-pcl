@@ -158,3 +158,36 @@ def rad2deg(float alpha):
 # cdef float normAngle (float alpha):
 #     return pcl_cmn.normAngle(alpha)
 
+cimport _pcl
+
+from cython.operator import dereference as deref
+#from shared_ptr cimport shared_ptr
+
+np.import_array()
+
+cdef extern from "minipcl.h":
+    void mpcl_estimate_boundaries(cpp.PointCloud_t &,
+                                  float, double, int, double,
+                                  char *, size_t) except +
+
+
+def estimate_boundaries(_pcl.PointCloud pc,
+                        float angle_threshold,
+                        double search_radius,
+                        int normal_ksearch=-1,
+                        double normal_search_radius=-1):
+    """Boundary estimation.
+
+    Returns an array of booleans (true = boundary point); one per point in
+    the point cloud pc.
+    """
+    if normal_ksearch == -1 and normal_search_radius == -1:
+        raise ValueError("Either K nearest neighbors (normal_ksearch) or a search radius (normal_search_radius) must be set.")
+    
+    cdef np.ndarray[np.uint8_t, ndim=1, mode='c'] out
+    out = np.empty(pc.size, dtype=np.uint8)
+    mpcl_estimate_boundaries(deref(pc.thisptr()), angle_threshold,
+                             search_radius, normal_ksearch,
+                             normal_search_radius, out.data, out.shape[0])
+    return out.astype(np.bool, copy=False)
+

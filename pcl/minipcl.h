@@ -79,5 +79,14 @@ void mpcl_features_NormalEstimationMethod_AVERAGE_DEPTH_CHANGE(pcl::IntegralImag
 void mpcl_features_NormalEstimationMethod_SIMPLE_3D_GRADIENT(pcl::IntegralImageNormalEstimation<pcl::PointXYZ, pcl::Normal> ne);
 void mpcl_features_NormalEstimationMethod_compute(pcl::IntegralImageNormalEstimation<pcl::PointXYZ, pcl::Normal> ne, pcl::PointCloud<pcl::Normal> &out);
 
+void mpcl_estimate_boundaries(pcl::PointCloud<pcl::PointXYZ> &cloud,
+                              float angle_threshold,
+                              double search_radius,
+                              int normal_ksearch,
+                              double normal_search_radius,
+                              char *out, size_t n);
+
+
+
 #endif // _MINIPCL_H_
 
